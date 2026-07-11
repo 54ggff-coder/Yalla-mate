@@ -1,0 +1,14 @@
+{
+  "name": "Yalla Mate - يلا طلعنا",
+  "description": "Smart bilingual social platform with Saudi/Arabian localizations helping companions coordinate real-life outings (Cafes, PC gaming, billiard tournaments) with personality quiz archetypes, any country phone verification, automatic fuel/transport split calculations, and chat coordinate safeguards.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera",
+    "microphone",
+    "clipboard-read",
+    "clipboard-write"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
