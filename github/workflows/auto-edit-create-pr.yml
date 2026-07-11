@@ -1,0 +1,42 @@
+name: Auto Edit and Create PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Commit message to use (optional)'
+        required: false
+        default: 'Auto update from workflow'
+
+permissions:
+  contents: write
+
+jobs:
+  edit-and-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Make changes (example)
+        run: |
+          # This step demonstrates a safe example change. Edit or replace these commands
+          # with the changes you want the workflow to perform.
+          mkdir -p .github/auto-updates
+          echo "تم التحديث آليًا بواسطة GitHub Actions في $(date -u)" >> .github/auto-updates/auto-update.txt
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: ${{ github.event.inputs.message || 'Auto update from workflow' }}
+          branch: auto/auto-update-${{ github.run_id }}
+          title: "Auto updates by workflow"
+          body: |
+            This pull request was created automatically by a workflow to apply automated changes.
+            
+            If you need different behavior, edit the workflow file at .github/workflows/auto-edit-create-pr.yml.
+          labels: automated
