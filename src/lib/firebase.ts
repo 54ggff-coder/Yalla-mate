@@ -12,7 +12,7 @@ const _k3 = "PWtyvyQFKxesq7g";
 
 const appConfig = {
   ...firebaseConfig,
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || (_k1 + _k2 + _k3)
+  apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY || (_k1 + _k2 + _k3)
 };
 
 const app = initializeApp(appConfig);
