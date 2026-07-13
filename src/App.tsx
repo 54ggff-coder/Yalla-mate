@@ -12,6 +12,7 @@ import { analytics } from './services/analyticsService';
 import { initSentry, captureException, startTransaction } from './lib/sentry';
 import { Profile, Outing, Message, OutingReview, AppNotification, Reel, PendingOperation } from './types';
 import { useLocation } from './contexts/LocationContext';
+import { APIProvider } from '@vis.gl/react-google-maps';
 import SocialHub from './components/SocialHub';
 import RegisterFlow from './components/RegisterFlow';
 import Dashboard from './components/Dashboard';
@@ -283,16 +284,25 @@ const syncProfileToDb = async (profile: any) => {
 
 
 
-const API_KEY =
-  process.env.GOOGLE_MAPS_PLATFORM_KEY ||
-  (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
-  (globalThis as any).GOOGLE_MAPS_PLATFORM_KEY ||
-  '';
-const hasValidKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
 
 export default function App() {
-  return (
+  const [googleMapsKey, setGoogleMapsKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/maps/config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.apiKey) setGoogleMapsKey(data.apiKey);
+      })
+      .catch(err => console.error('Failed to load map config:', err));
+  }, []);
+
+  return googleMapsKey ? (
+    <APIProvider apiKey={googleMapsKey}>
       <AppContent />
+    </APIProvider>
+  ) : (
+    <AppContent />
   );
 }
 
@@ -2010,12 +2020,12 @@ function AppContent() {
     }
 
     // G. Multiplexed Single WebSocket Real-time Connection
-    const syncChannel = supabase
-      .channel('public:unified-realtime-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => {
+    const channel_reels = supabase.channel('reels_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => {
         fetchReels();
       })
-      
+      .subscribe();
+
+    const channel_reels_bookmarks = supabase.channel('reels_bookmarks_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_bookmarks' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           const currentUserId = currentUserRef.current?.id;
@@ -2052,6 +2062,9 @@ function AppContent() {
           }
         }
       })
+      .subscribe();
+
+    const channel_reels_comments = supabase.channel('reels_comments_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_comments' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           const currentUserId = currentUserRef.current?.id;
@@ -2088,6 +2101,9 @@ function AppContent() {
           }
         }
       })
+      .subscribe();
+
+    const channel_reels_likes = supabase.channel('reels_likes_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_likes' }, (payload) => {
         fetchReels();
 
@@ -2132,6 +2148,9 @@ function AppContent() {
           }
         }
       })
+      .subscribe();
+
+    const channel_reels_comments_2 = supabase.channel('reels_comments_sync_2')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_comments' }, (payload) => {
         fetchReels();
 
@@ -2178,12 +2197,21 @@ function AppContent() {
           }
         }
       })
+      .subscribe();
+
+    const channel_users = supabase.channel('users_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
         fetchUsers();
       })
+      .subscribe();
+
+    const channel_outings = supabase.channel('outings_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'outings' }, () => {
         fetchOutings();
       })
+      .subscribe();
+
+    const channel_follows = supabase.channel('follows_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'follows' }, (payload) => {
         fetchFollows();
         
@@ -2219,6 +2247,9 @@ function AppContent() {
           }
         }
       })
+      .subscribe();
+
+    const channel_friend_requests = supabase.channel('friend_requests_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_requests' }, (payload) => {
         fetchFriends();
         
@@ -2285,6 +2316,9 @@ function AppContent() {
           }
         }
       })
+      .subscribe();
+
+    const channel_direct_messages = supabase.channel('direct_messages_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, (payload) => {
         fetchDirectMessages();
         
@@ -2378,7 +2412,17 @@ function AppContent() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(syncChannel);
+      
+      supabase.removeChannel(channel_reels);
+      supabase.removeChannel(channel_reels_bookmarks);
+      supabase.removeChannel(channel_reels_comments);
+      supabase.removeChannel(channel_reels_comments_2);
+      supabase.removeChannel(channel_reels_likes);
+      supabase.removeChannel(channel_users);
+      supabase.removeChannel(channel_outings);
+      supabase.removeChannel(channel_follows);
+      supabase.removeChannel(channel_friend_requests);
+
       clearInterval(schemaCheckInterval);
     };
   }, [currentUser?.id, lang, lowPowerMode]);
@@ -4572,5 +4616,6 @@ ${outingErrorModal.payloadDump}
         )}
       </AnimatePresence>
     </div>
+
   );
 }

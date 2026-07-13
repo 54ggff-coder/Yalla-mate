@@ -18,7 +18,6 @@ import { getPlaceholderImage } from '../utils/imageUtils';
 import { motion, AnimatePresence } from 'motion/react';
 
 
-const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY || '';
 
 interface CityGuideProps {
   currentUser: Profile;

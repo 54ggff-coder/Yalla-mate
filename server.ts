@@ -3847,6 +3847,15 @@ app.post('/api/yallamate/optimize-transport', async (req: Request, res: Response
 
 
 
+// Google Maps API Key Proxy
+app.get("/api/maps/config", (req: Request, res: Response) => {
+  const apiKey = process.env.GOOGLE_MAPS_PLATFORM_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: "Google Maps API Key not configured on the server." });
+  }
+  res.json({ apiKey });
+});
+
 // Google Maps Distance Matrix API Proxy
 app.get("/api/distance", async (req: Request, res: Response) => {
   const { origins, destinations } = req.query;

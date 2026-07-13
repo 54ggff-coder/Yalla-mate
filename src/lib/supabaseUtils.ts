@@ -305,7 +305,7 @@ export async function validateOutingRlsPolicies(): Promise<{ ok: boolean; errors
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      const testId = 'rls_diag_chk_99999';
+      const testId = '00000000-0000-0000-0000-000000000000';
       
       const { error: selectErr } = await supabase.from('outings').select('id').eq('id', testId).limit(1);
       if (selectErr && (selectErr.code === '42501' || selectErr.message?.includes('row-level security'))) {
