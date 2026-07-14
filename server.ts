@@ -1207,7 +1207,6 @@ JSON Schema requirements:
         contents: promptText,
         config: {
           responseMimeType: 'application/json',
-          tools: [{ googleSearch: {} }], // Grounding with Google Search for real places
           responseSchema: {
             type: Type.OBJECT,
             properties: {
@@ -2582,7 +2581,6 @@ You must respond with a single JSON object conforming EXACTLY to this schema:
           contents: promptText,
           config: {
             responseMimeType: 'application/json',
-            tools: [{ googleSearch: {} }], // Grounding for real-world correctness!
             responseSchema: {
               type: Type.OBJECT,
               properties: {
@@ -2692,7 +2690,6 @@ Provide your answer as a single, valid JSON object matching this schema:
           contents: promptText,
           config: {
             responseMimeType: 'application/json',
-            tools: [{ googleSearch: {} }], // Use Google Search backing to ensure real physical spots
             responseSchema: {
               type: Type.OBJECT,
               properties: {
@@ -2861,7 +2858,7 @@ app.post('/api/fuel-price', async (req: Request, res: Response): Promise<any> =>
           model: 'gemini-2.0-flash',
           contents: promptText,
           config: {
-            tools: [{ googleSearch: {} }]
+            tools: [{ googleSearch: {} }],
           }
         });
         
@@ -3021,7 +3018,6 @@ Provide your answer as a single, valid JSON object matching this schema:
           contents: promptText,
           config: {
             responseMimeType: 'application/json',
-            tools: [{ googleSearch: {} }], // Use Search grounding for actual trending places and real-world relevance
             responseSchema: {
               type: Type.OBJECT,
               properties: {
@@ -3164,7 +3160,6 @@ app.post('/api/ai-planner', async (req: Request, res: Response) => {
           contents: promptText,
           config: {
             responseMimeType: 'application/json',
-            tools: [{ googleSearch: {} }]
           },
         });
 
@@ -3562,7 +3557,7 @@ app.post('/api/murshed/owner-chat', async (req: Request, res: Response): Promise
           contents: prompt,
           config: {
             systemInstruction,
-            tools: [{ googleSearch: {} }], // Internet search enabled!
+            tools: [{ googleSearch: {} }],
           }
         });
 

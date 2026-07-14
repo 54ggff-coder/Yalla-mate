@@ -212,3 +212,37 @@ DROP POLICY IF EXISTS "notifications_insert" ON public.notifications;
 CREATE POLICY "notifications_insert" ON public.notifications FOR INSERT WITH CHECK (auth.uid() = actor_id);
 DROP POLICY IF EXISTS "notifications_update" ON public.notifications;
 CREATE POLICY "notifications_update" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+
+-- إصلاح صلاحيات الوصول للبيانات
+GRANT SELECT ON auth.users TO authenticated;
+GRANT SELECT ON auth.users TO anon;
+
+GRANT ALL PRIVILEGES ON TABLE public.users TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.outings TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.friend_requests TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.direct_messages TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.reels TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.reels_likes TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.reels_comments TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.reels_comment_replies TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.notifications TO authenticated, anon;
+GRANT ALL PRIVILEGES ON TABLE public.places TO authenticated, anon;
+
+-- إعادة تحميل المخطط (Schema Cache)
+NOTIFY pgrst, 'reload schema';
+
+-- ==============================================================================
+-- 10. GRANTS & PERMISSIONS (Fix for "permission denied for table" errors)
+-- ==============================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
+-- Allow access to auth.users for foreign key and user lookups
+GRANT SELECT ON auth.users TO authenticated;
+GRANT SELECT ON auth.users TO anon;
+
+-- Grant access to all current tables in public schema
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO authenticated, anon;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon;
+GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public TO authenticated, anon;
+
+NOTIFY pgrst, reload_schema;
