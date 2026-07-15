@@ -14,18 +14,56 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/vite.svg" />
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(reg => {
-            console.log('SW registered!', reg);
-          }).catch(err => console.log('SW registration failed:', err));
-        });
-      }
-    </script>
+      </script>
     <meta name="author" content="Ali Fouad Al-Khidir Salem" />
     <meta name="copyright" content="© 2026 Ali Fouad Al-Khidir Salem. All rights reserved." />
     <title>يلا طلعنا | YallaMate</title>
-  </head>
+  
+    
+
+    <script>
+      function sendLog(msg) {
+        fetch('/api/debug-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(msg)
+        }).catch(() => {});
+      }
+      window.addEventListener('error', (event) => {
+        sendLog({type: 'error', message: event.message, filename: event.filename, lineno: event.lineno, colno: event.colno});
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        sendLog({type: 'unhandledrejection', reason: event.reason ? event.reason.toString() : 'unknown'});
+      });
+      console.log = new Proxy(console.log, {
+        apply(target, thisArg, args) {
+          sendLog({type: 'log', args: args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a))});
+          return target.apply(thisArg, args);
+        }
+      });
+      console.error = new Proxy(console.error, {
+        apply(target, thisArg, args) {
+          sendLog({type: 'console_error', args: args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a))});
+          return target.apply(thisArg, args);
+        }
+      });
+    </script>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          let shouldReload = false;
+          for(let registration of registrations) {
+            registration.unregister();
+            shouldReload = true;
+          }
+          if (shouldReload) {
+            window.location.reload();
+          }
+        });
+      }
+    </script>
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

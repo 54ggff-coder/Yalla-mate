@@ -3,7 +3,7 @@ import { haptic } from './lib/haptics';
 import { supabase } from './lib/supabase';
 import { getPendingMessages, clearPendingMessages, getCachedOutings, saveOutingsToCache, getCachedReels, saveReelsToCache } from './services/db';
 import { auth } from './lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut as fbSignOut } from 'firebase/auth';
 import { reelsLikesService } from './services/reelsLikesService';
 import { FriendshipManager } from './services/friendshipManager';
 import { SocialService } from './services/socialService';
@@ -2020,12 +2020,12 @@ function AppContent() {
     }
 
     // G. Multiplexed Single WebSocket Real-time Connection
-    const channel_reels = supabase.channel('reels_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => {
+    const channel_reels = supabase.channel('reels_sync_' + Math.random().toString(36).substr(2, 9)).on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => {
         fetchReels();
       })
       .subscribe();
 
-    const channel_reels_bookmarks = supabase.channel('reels_bookmarks_sync')
+    const channel_reels_bookmarks = supabase.channel('reels_bookmarks_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_bookmarks' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           const currentUserId = currentUserRef.current?.id;
@@ -2064,7 +2064,7 @@ function AppContent() {
       })
       .subscribe();
 
-    const channel_reels_comments = supabase.channel('reels_comments_sync')
+    const channel_reels_comments = supabase.channel('reels_comments_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_comments' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           const currentUserId = currentUserRef.current?.id;
@@ -2103,7 +2103,7 @@ function AppContent() {
       })
       .subscribe();
 
-    const channel_reels_likes = supabase.channel('reels_likes_sync')
+    const channel_reels_likes = supabase.channel('reels_likes_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_likes' }, (payload) => {
         fetchReels();
 
@@ -2150,7 +2150,7 @@ function AppContent() {
       })
       .subscribe();
 
-    const channel_reels_comments_2 = supabase.channel('reels_comments_sync_2')
+    const channel_reels_comments_2 = supabase.channel('reels_comments_sync_2_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels_comments' }, (payload) => {
         fetchReels();
 
@@ -2199,19 +2199,19 @@ function AppContent() {
       })
       .subscribe();
 
-    const channel_users = supabase.channel('users_sync')
+    const channel_users = supabase.channel('users_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
         fetchUsers();
       })
       .subscribe();
 
-    const channel_outings = supabase.channel('outings_sync')
+    const channel_outings = supabase.channel('outings_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'outings' }, () => {
         fetchOutings();
       })
       .subscribe();
 
-    const channel_follows = supabase.channel('follows_sync')
+    const channel_follows = supabase.channel('follows_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'follows' }, (payload) => {
         fetchFollows();
         
@@ -2249,7 +2249,7 @@ function AppContent() {
       })
       .subscribe();
 
-    const channel_friend_requests = supabase.channel('friend_requests_sync')
+    const channel_friend_requests = supabase.channel('friend_requests_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_requests' }, (payload) => {
         fetchFriends();
         
@@ -2318,7 +2318,7 @@ function AppContent() {
       })
       .subscribe();
 
-    const channel_direct_messages = supabase.channel('direct_messages_sync')
+    const channel_direct_messages = supabase.channel('direct_messages_sync_' + Math.random().toString(36).substr(2, 9))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, (payload) => {
         fetchDirectMessages();
         
@@ -2422,6 +2422,7 @@ function AppContent() {
       supabase.removeChannel(channel_outings);
       supabase.removeChannel(channel_follows);
       supabase.removeChannel(channel_friend_requests);
+      supabase.removeChannel(channel_direct_messages);
 
       clearInterval(schemaCheckInterval);
     };
@@ -3491,6 +3492,11 @@ function AppContent() {
       } catch (e) {
         console.error("Failed standard sign out:", e);
       }
+    }
+    try {
+      await fbSignOut(auth);
+    } catch (e) {
+      console.error("Failed Firebase sign out:", e);
     }
     setCurrentUser(null);
     setSelectedOutingId(null);

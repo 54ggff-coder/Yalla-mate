@@ -1,0 +1,10 @@
+--- server.ts
++++ server.ts
+@@ -3884,2 +3884,7 @@
+ 
++  app.post('/api/debug-log', express.json(), (req, res) => {
++    console.error("[CLIENT LOG]", req.body);
++    res.json({ok: true});
++  });
++
+   app.listen(PORT, '0.0.0.0', () => {

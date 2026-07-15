@@ -930,9 +930,28 @@ export default function RegisterFlow({ emailVerified, onRegisterComplete, lang, 
                     setStep('welcome');
                     setAuthMode('login');
                   }}
-                  className="w-full bg-slate-900 border border-white/10 hover:border-white/25 hover:bg-slate-800 text-rose-400 hover:text-rose-500 py-3.5 rounded-xl font-bold text-xs transition-all tracking-wider uppercase active:scale-[0.98] cursor-pointer"
+                  className="w-full bg-slate-900 border border-white/10 hover:border-white/25 hover:bg-slate-800 text-rose-400 hover:text-rose-500 py-3.5 rounded-xl font-bold text-xs transition-all tracking-wider uppercase active:scale-[0.98] cursor-pointer animate-pulse"
                 >
                   {lang === 'ar' ? 'حذف الحساب وإلغاء العملية' : 'Delete Account & Cancel'}
+                </button>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      if (supabase) {
+                        await supabase.auth.signOut();
+                      }
+                      await auth.signOut();
+                      localStorage.removeItem('yallamate_current_user');
+                    } catch (e) {
+                      console.error("Error signing out:", e);
+                    }
+                    setStep('welcome');
+                    setAuthMode('login');
+                  }}
+                  className="w-full bg-transparent border border-white/5 hover:border-white/10 text-slate-400 hover:text-white py-2 rounded-xl font-bold text-xs transition-all tracking-wider uppercase active:scale-[0.98] cursor-pointer text-center block mt-1"
+                >
+                  {lang === 'ar' ? 'تسجيل الخروج فقط' : 'Sign Out Only'}
                 </button>
               </div>
             </motion.div>
@@ -1285,7 +1304,18 @@ export default function RegisterFlow({ emailVerified, onRegisterComplete, lang, 
                   </p>
                 </div>
                 <button
-                  onClick={() => setStep('welcome')}
+                  onClick={async () => {
+                    try {
+                      if (supabase) {
+                        await supabase.auth.signOut();
+                      }
+                      await auth.signOut();
+                      localStorage.removeItem('yallamate_current_user');
+                    } catch (e) {
+                      console.error("Error signing out:", e);
+                    }
+                    setStep('welcome');
+                  }}
                   className="px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-[10px] font-black uppercase text-slate-300 font-mono tracking-widest cursor-pointer transition"
                 >
                   {lang === 'ar' ? 'رجوع' : 'Back'}
@@ -1449,7 +1479,18 @@ export default function RegisterFlow({ emailVerified, onRegisterComplete, lang, 
 
               <div className="flex gap-4 mt-8">
                 <button
-                  onClick={() => setStep('welcome')}
+                  onClick={async () => {
+                    try {
+                      if (supabase) {
+                        await supabase.auth.signOut();
+                      }
+                      await auth.signOut();
+                      localStorage.removeItem('yallamate_current_user');
+                    } catch (e) {
+                      console.error("Error signing out:", e);
+                    }
+                    setStep('welcome');
+                  }}
                   className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white uppercase tracking-widest font-black rounded-2xl transition text-center text-xs cursor-pointer"
                 >
                   {lang === 'ar' ? 'إلغاء' : 'Cancel'}

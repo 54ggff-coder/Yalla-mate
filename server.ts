@@ -3882,7 +3882,13 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  
+  app.post('/api/debug-log', express.json(), (req, res) => {
+    require('fs').appendFileSync('client.log', JSON.stringify(req.body) + '\n');
+    res.json({ok: true});
+  });
+  app.listen(PORT, '0.0.0.0'
+, () => {
     console.log(`[YallaMate] Server listening on http://0.0.0.0:${PORT}`);
   });
 }
