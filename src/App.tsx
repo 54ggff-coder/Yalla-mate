@@ -1358,20 +1358,6 @@ function AppContent() {
 
   // Auth Listener and URL Cleaner
   useEffect(() => {
-    // Clean OAuth / Google access token params immediately on mount to prevent any visual UI freeze, stuck loops, or duplicated state triggers
-    if (window.location.hash && (
-      window.location.hash.includes('access_token=') || 
-      window.location.hash.includes('id_token=') || 
-      window.location.hash.includes('expires_in=') ||
-      window.location.hash.includes('error=')
-    )) {
-      console.log('[Auth URL Cleaner] Google OAuth access token hash detected on mount. Cleaning URL immediately.');
-      const urlWithoutHash = window.location.pathname + window.location.search;
-      window.history.replaceState(null, '', urlWithoutHash);
-    } else if (window.location.hash && !window.location.hash.includes('access_token=') && !window.location.hash.includes('id_token=') && !window.location.hash.includes('expires_in=')) {
-      window.history.replaceState(null, '', window.location.pathname);
-    }
-
     if (!supabase) return;
 
     // Direct check on mount for popup window
@@ -1380,9 +1366,23 @@ function AppContent() {
         window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', session }, '*');
         setTimeout(() => window.close(), 1500);
       }
-    });
 
-    // No interval to clean up here
+      // Clean OAuth / Google access token params AFTER getSession completes
+      setTimeout(() => {
+        if (window.location.hash && (
+          window.location.hash.includes('access_token=') || 
+          window.location.hash.includes('id_token=') || 
+          window.location.hash.includes('expires_in=') ||
+          window.location.hash.includes('error=')
+        )) {
+          console.log('[Auth URL Cleaner] Google OAuth access token hash detected. Cleaning URL.');
+          const urlWithoutHash = window.location.pathname + window.location.search;
+          window.history.replaceState(null, '', urlWithoutHash);
+        } else if (window.location.hash && !window.location.hash.includes('access_token=') && !window.location.hash.includes('id_token=') && !window.location.hash.includes('expires_in=')) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }, 500);
+    });
   }, []);
 
   // Diagnostic status panel
@@ -1401,11 +1401,6 @@ function AppContent() {
 
   useEffect(() => {
     if (!supabase) return;
-
-    // Immediately clear out auth parameters from the URL to prevent auth loops on reload
-    if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('id_token='))) {
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-    }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       // Clear token hash on subsequent events as well

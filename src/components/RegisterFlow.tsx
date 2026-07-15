@@ -518,33 +518,53 @@ export default function RegisterFlow({ emailVerified, onRegisterComplete, lang, 
     if (isAuthenticating) return;
     setIsAuthenticating(true);
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      handleAuthSuccess('google', user.email || '', user.displayName || 'مستخدم جديد', user.uid);
+      if (!supabase) {
+        throw new Error(lang === 'ar' ? "قاعدة بيانات Supabase غير مهيأة بعد." : "Supabase database client is not initialized.");
+      }
+
+      // Trigger Supabase OAuth sign-in url
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+      if (!data || !data.url) {
+        throw new Error(lang === 'ar' ? "فشل الحصول على رابط تسجيل الدخول من Supabase." : "Failed to get auth URL from Supabase.");
+      }
+
+      // Open in a popup window
+      const authWindow = window.open(
+        data.url,
+        'yallamate_oauth_popup',
+        'width=600,height=700'
+      );
+
+      if (!authWindow) {
+        alert(
+          lang === 'ar'
+            ? 'تم حظر النافذة المنبثقة! يرجى السماح بالنوافذ المنبثقة لموقعنا لتسجيل الدخول.'
+            : 'Popup blocked! Please allow popups for this site to sign in.'
+        );
+      }
     } catch (e: any) {
-      console.warn('[Google Auth] Native popup login failed, invoking preview-safe simulated Google login fallback:', e);
-      logAuthDebug('RegisterFlow.tsx -> handleGoogleLogin', 'Google Sign-In', e);
+      console.warn('[Google Auth] Supabase popup login failed, invoking preview-safe simulated Google login fallback:', e);
+      logAuthDebug('RegisterFlow.tsx -> handleGoogleLogin', 'Google Sign-In (Supabase)', e);
       
       const useSimulated = window.confirm(
         lang === 'ar' 
-          ? "تم حظر نافذة تسجيل الدخول من Google بواسطة المتصفح (شائع داخل إطار المعاينة). هل ترغب في استخدام تسجيل دخول Google تجريبي وسريع للتجربة والتطوير؟" 
-          : "Google login popup was blocked or failed (common inside preview iframes). Would you like to use a simulated Google login for demo and development purposes?"
+          ? "حدث خطأ أثناء الاتصال بـ Supabase لمصادقة Google (شائع إذا كانت مفاتيح API غير مهيأة بعد أو في بيئة المعاينة). هل ترغب في استخدام تسجيل دخول Google تجريبي وسريع للتجربة والتطوير؟" 
+          : "An error occurred while connecting to Supabase for Google auth (common if API keys are unconfigured or in preview). Would you like to use a simulated Google login for demo and development purposes?"
       );
       
       if (useSimulated) {
         sessionStorage.setItem('yallamate_skip_verify', 'true');
         handleAuthSuccess('google', 'owner_google_demo@gmail.com', lang === 'ar' ? 'علي الخضر (جوجل)' : 'Ali Al-Khidr (Google)', 'simulated_google_uid_12345');
       } else {
-        if (e?.code === 'auth/operation-not-allowed') {
-          const errorMsg = lang === 'ar' 
-            ? "طريقة تسجيل الدخول باستخدام Google غير مفعلة في لوحة تحكم Firebase Console لمشروعك. يرجى الانتقال إلى قسم Authentication وتفعيل Google Sign-In."
-            : "Google Sign-In is not enabled in your Firebase Console. Please open the Firebase Console, go to 'Authentication' -> 'Sign-in method', and enable 'Google'.";
-          alert(errorMsg);
-        } else {
-          alert(lang === 'ar' ? "فشل تسجيل الدخول: " + e.message : "Login failed: " + e.message);
-        }
+        alert(lang === 'ar' ? "فشل تسجيل الدخول: " + (e.message || e) : "Login failed: " + (e.message || e));
       }
     } finally {
       setIsAuthenticating(false);
